@@ -1,0 +1,60 @@
+{# # This file is part of the YesWiki Extension bellerecherche.
+# Authors : see README.md file that was distributed with this source code.
+# For the full copyright and license information, please view the LICENSE
+# file that was distributed with this source code. #}
+
+{% if displayForm %}
+  <form action="{{ url({method:""}) }}" method="get">
+    {% if tag is not empty %}<input type="hidden" name="wiki" value="{{ tag }}"/>{% endif %}
+    <div class="input-prepend input-append input-group input-group-lg">
+      <span class="add-on input-group-addon"><i class="fa fa-search icon-search"></i></span>
+      <input 
+          name="phrase" 
+          type="text" 
+          class="form-control" 
+          placeholder="{{ args.label }}" 
+          size="{{ args.size }}"
+          value="{{ searchText }}" >
+      <span class="input-group-btn">
+      <input 
+        type="submit" 
+        class="btn btn-primary btn-lg" 
+        value="{{ args.button }}" />
+      </span>
+      </div>
+      <span class="">
+        <small>{{ _t('NEWTEXTSEARCH_HINT') }}</small>
+      </span>
+      <br>
+    </div>
+  </form>
+{% endif %}
+
+{% if searchText is empty %}
+{% elseif results is empty %}
+  {{ format('---- --- **' ~ _t('NO_SEARCH_RESULT') ~ '.**')|raw }}
+{% elseif args.separator is empty %}
+  {{ format('---- --- **' ~ _t('SEARCH_RESULTS') ~ ' [""' ~ searchText ~ '""] :---**')|raw }}
+  <ol>
+    {% for page in results %}
+      {% if page.hasAccess %}
+        <li>
+          <h4 style="margin-bottom:0.2rem;"><a href="{{ url({tag:page.tag}) }}">{{ page.tag }}</a></h4>
+          {% if page.preRendered is not empty %}
+            {{ page.preRendered|raw }}
+          {% endif %}
+        </li>
+      {% endif %}
+    {% endfor %}
+  </ol>
+{% else %}
+  <p>{{ _t('SEARCH_RESULT_OF') }} "{{ searchText }}"&nbsp;: 
+    {% set firstDisplayItem = true %}
+    {% for page in results %}
+      {% if page.hasAccess %}
+        {% if not firstDisplayItem %}{{ args.separator }}{% else %}{% set firstDisplayItem = false %}{% endif %}
+        <a href="{{ url({tag:page.tag}) }}">{{ page.tag }}</a>
+      {% endif %}
+    {% endfor %}
+  </p>
+{% endif %}
