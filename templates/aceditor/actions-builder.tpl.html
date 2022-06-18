@@ -1,0 +1,64 @@
+<?php
+
+/*
+ * This file is part of the YesWiki Extension bellerecherche.
+ *
+ * Authors : see README.md file that was distributed with this source code.
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+
+ use YesWiki\Core\Service\AssetsManager;
+
+ if (isset($data) &&
+     isset($data['action_groups']) &&
+     isset($data['action_groups']['advanced-actions']) &&
+     isset($data['action_groups']['advanced-actions']['actions']) &&
+     isset($data['action_groups']['advanced-actions']['actions']['newtextsearch']) &&
+     isset($data['action_groups']['advanced-actions']['actions']['newtextsearch']['properties'])){
+     $data['action_groups']['advanced-actions']['actions']['newtextsearch']['properties']['label'] = [
+         'label' => _t('AB_advanced_action_textsearch_label_label'),
+         'type' => "text",
+         'default' => _t('WHAT_YOU_SEARCH')." : ",
+     ];
+     $data['action_groups']['advanced-actions']['actions']['newtextsearch']['properties']['size'] = [
+         'label' => _t('AB_advanced_action_textsearch_size_label'),
+         'type' => "number",
+         'default' => "40",
+         'min' => '1',
+     ];
+     $data['action_groups']['advanced-actions']['actions']['newtextsearch']['properties']['button'] = [
+         'label' => _t('AB_advanced_action_textsearch_button_label'),
+         'type' => "text",
+         'default' => _t('SEARCH'),
+     ];
+     $data['action_groups']['advanced-actions']['actions']['newtextsearch']['properties']['phrase'] = [
+         'label' => _t('AB_advanced_action_textsearch_phrase_label'),
+         'type' => "text",
+         'default' => "",
+         'advanced' => true,
+     ];
+     $data['action_groups']['advanced-actions']['actions']['newtextsearch']['properties']['separator'] = [
+         'label' => _t('AB_advanced_action_textsearch_separator_label'),
+         'type' => "text",
+         'default' => "",
+         'advanced' => true,
+     ];
+ }
+ 
+ $paths = $this->twigLoader->getPaths("aceditor");
+ $curExtDirName = basename(dirname(dirname(dirname(__FILE__))));
+ $curDir = "tools/$curExtDirName/templates/aceditor";
+ 
+ // render next following custom actions-builder.tpl.html
+ $curPos = array_search($curDir,$paths);
+ if ($curPos !== false) {
+    for ($i=($curPos+1); $i < count($paths); $i++) { 
+        if ($paths[$i] != $curDir && $this->hasTemplate("{$paths[$i]}/actions-builder.tpl.html")){
+            echo $this->render("{$paths[$i]}/actions-builder.tpl.html",compact(['data']));
+            break;
+        }
+    }
+}
