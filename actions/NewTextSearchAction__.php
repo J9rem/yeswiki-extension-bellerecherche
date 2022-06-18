@@ -17,11 +17,13 @@ use YesWiki\Bazar\Service\FormManager;
 use YesWiki\Bazar\Service\SearchManager;
 use YesWiki\Core\Service\AclService;
 use YesWiki\Core\Service\DbService;
+use YesWiki\Core\Service\TemplateEngine;
 use YesWiki\Core\YesWikiAction;
 
 class NewTextSearchAction__ extends YesWikiAction
 {
     public const DEFAULT_TEMPLATE = "newtextsearch.twig";
+    public const BY_FORM_TEMPLATE = "newtextsearch-by-form.twig";
     public const MAX_DISPLAY_PAGES = 25;
 
     protected $aclService;
@@ -30,9 +32,16 @@ class NewTextSearchAction__ extends YesWikiAction
     protected $entryManager;
     protected $formManager;
     protected $searchManager;
+    protected $templateEngine;
 
     public function formatArguments($arg)
     {
+        $this->templateEngine = $this->getservice(TemplateEngine::class);
+        $template = (!empty($arg['template']) &&
+            !empty(basename($arg['template'])) &&
+            $this->templateEngine->hasTemplate("@core/".basename($arg['template'])))
+            ? basename($arg['template'])
+            : self::DEFAULT_TEMPLATE;
         return [
             // label à afficher devant la zone de saisie
             'label' => isset($arg['label']) && is_string($arg['label']) ? $arg['label'] : _t('WHAT_YOU_SEARCH')." : ",
@@ -44,12 +53,8 @@ class NewTextSearchAction__ extends YesWikiAction
             'phrase' => isset($arg['phrase']) && is_string($arg['phrase']) ? $arg['phrase']: '',
             // séparateur entre les éléments trouvés
             'separator' => isset($arg['separator']) && is_string($arg['separator']) ? htmlspecialchars($arg['separator'], ENT_COMPAT, YW_CHARSET): '',
-            'template' =>
-                (!empty($arg['template']) &&
-                !empty(basename($arg['template'])) &&
-                $this->twig->hasTemplate("@core/".basename($arg['template'])))
-                ? "@core/".basename($arg['template'])
-                : self::DEFAULT_TEMPLATE,
+            'template' =>$template,
+            'displaytext' => $this->formatBoolean($arg, $template == self::DEFAULT_TEMPLATE, 'displaytext'),
         ];
     }
 
@@ -73,6 +78,7 @@ class NewTextSearchAction__ extends YesWikiAction
             $searchText = htmlspecialchars($_GET['phrase'], ENT_COMPAT, YW_CHARSET);
         }
 
+        $formsTitles = [];
         if (!empty($searchText)) {
             list('requestfull' => $sqlRequest, 'needles' => $needles) = $this->getSqlRequest($searchText);
             $results = $this->dbService->loadAll($sqlRequest);
@@ -82,7 +88,8 @@ class NewTextSearchAction__ extends YesWikiAction
                 $counter = 0;
                 foreach ($results as $key => $page) {
                     $results[$key]['hasAccess'] = $this->aclService->hasAccess("read", $page["tag"]);
-                    if (empty($this->arguments['separator']) &&
+                    if ($this->arguments['displaytext'] &&
+                        empty($this->arguments['separator']) &&
                         $results[$key]['hasAccess'] &&
                         $counter < self::MAX_DISPLAY_PAGES &&
                         $page["tag"] != $this->wiki->tag &&
@@ -103,8 +110,22 @@ class NewTextSearchAction__ extends YesWikiAction
                                 $needles
                             );
                         }
+                        $counter += 1;
                     }
-                    $counter += 1;
+                    if ($this->arguments['template'] == self::BY_FORM_TEMPLATE && $results[$key]['hasAccess']) {
+                        if ($this->entryManager->isEntry($page["tag"])) {
+                            $entry = $this->entryManager->getOne($page["tag"]);
+                            if (!empty($entry['id_typeannonce'])) {
+                                $results[$key]['form'] =  strval(intval($entry['id_typeannonce']));
+                                if (!isset($formsTitles[$results[$key]['form']])) {
+                                    $form = $this->formManager->getOne($results[$key]['form']);
+                                    $formsTitles[$results[$key]['form']] = $form['bn_label_nature'] ?? $results[$key]['form'];
+                                }
+                            }
+                        } else {
+                            $results[$key]['form'] =  'page';
+                        }
+                    }
                 }
             }
         }
@@ -115,6 +136,7 @@ class NewTextSearchAction__ extends YesWikiAction
             'args' => $this->arguments,
             'results' => $results ?? [],
             'tag' => $this->params->get('rewrite_mode') ? '' : $this->wiki->tag,
+            'formsTitles' => $formsTitles,
         ]);
     }
 

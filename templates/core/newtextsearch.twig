@@ -30,31 +30,33 @@
   </form>
 {% endif %}
 
-{% if searchText is empty %}
-{% elseif results is empty %}
-  {{ format('---- --- **' ~ _t('NO_SEARCH_RESULT') ~ '.**')|raw }}
-{% elseif args.separator is empty %}
-  {{ format('---- --- **' ~ _t('SEARCH_RESULTS') ~ ' [""' ~ searchText ~ '""] :---**')|raw }}
-  <ol>
-    {% for page in results %}
-      {% if page.hasAccess %}
-        <li>
-          <h4 style="margin-bottom:0.2rem;"><a href="{{ url({tag:page.tag}) }}">{{ page.tag }}</a></h4>
-          {% if page.preRendered is not empty %}
-            {{ page.preRendered|raw }}
-          {% endif %}
-        </li>
-      {% endif %}
-    {% endfor %}
-  </ol>
-{% else %}
-  <p>{{ _t('SEARCH_RESULT_OF') }} "{{ searchText }}"&nbsp;: 
-    {% set firstDisplayItem = true %}
-    {% for page in results %}
-      {% if page.hasAccess %}
-        {% if not firstDisplayItem %}{{ args.separator }}{% else %}{% set firstDisplayItem = false %}{% endif %}
-        <a href="{{ url({tag:page.tag}) }}">{{ page.tag }}</a>
-      {% endif %}
-    {% endfor %}
-  </p>
-{% endif %}
+{% block results %}
+  {% if searchText is empty %}
+  {% elseif results is empty %}
+    {{ format('---- --- **' ~ _t('NO_SEARCH_RESULT') ~ '.**')|raw }}
+  {% elseif args.separator is empty %}
+    {{ format('---- --- **' ~ _t('SEARCH_RESULTS') ~ ' [""' ~ searchText ~ '""] :---**')|raw }}
+    <ol>
+      {% for page in results %}
+        {% if page.hasAccess %}
+          <li>
+            <h4 style="margin-bottom:0.2rem;"><a href="{{ url({tag:page.tag}) }}">{{ page.tag }}</a></h4>
+            {% if page.preRendered is not empty %}
+              {{ page.preRendered|raw }}
+            {% endif %}
+          </li>
+        {% endif %}
+      {% endfor %}
+    </ol>
+  {% else %}
+    <p>{{ _t('SEARCH_RESULT_OF') }} "{{ searchText }}"&nbsp;: 
+      {% set firstDisplayItem = true %}
+      {% for page in results %}
+        {% if page.hasAccess %}
+          {% if not firstDisplayItem %}{{ args.separator }}{% else %}{% set firstDisplayItem = false %}{% endif %}
+          <a href="{{ url({tag:page.tag}) }}">{{ page.tag }}</a>
+        {% endif %}
+      {% endfor %}
+    </p>
+  {% endif %}
+{% endblock %}

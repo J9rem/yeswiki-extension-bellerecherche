@@ -1,0 +1,37 @@
+{% macro displayResult(title,elems) %}
+    {% if elems is not empty %}
+        <div>
+            <h3>{{ title }}</h3>
+            
+            <ol>
+            {% for data in elems %}
+                {% if data.hasAccess %}
+                    <li>
+                        <h4 style="margin-bottom:0.2rem;"><a href="{{ url({tag:data.tag}) }}">{{ data.tag }}</a></h4>
+                        {% if data.preRendered is not empty %}
+                            {{ data.preRendered|raw }}
+                        {% endif %}
+                    </li>
+                {% endif %}
+            {% endfor %}
+            </ol>
+        </div>
+    {% endif %}
+{% endmacro %}
+
+{% extends "@core/newtextsearch.twig" %}
+
+{% block results %}
+  {% if searchText is empty %}
+  {% elseif results is empty %}
+    {{ format('---- --- **' ~ _t('NO_SEARCH_RESULT') ~ '.**')|raw }}
+  {% elseif args.separator is empty %}
+    {{ format('---- --- **' ~ _t('SEARCH_RESULTS') ~ ' [""' ~ searchText ~ '""] :---**')|raw }}
+    {# show by forms #}
+    {% for formId, formTitle in formsTitles %}
+        {{ _self.displayResult(formTitle,results|filter(e => e.form == formId)) }}
+    {% endfor %}
+    {# show pages #}
+    {{ _self.displayResult('Pages',results|filter(e => e.form == 'page')) }}
+  {% endif %}
+{% endblock %}
