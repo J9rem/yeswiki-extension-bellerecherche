@@ -40,7 +40,23 @@
       {% for page in results %}
         {% block liWithNumber %}
           <li>
-            <h4 style="margin-bottom:0.2rem;"><a href="{{ url({tag:page.tag}) }}">{{ page.tag }}</a></h4>
+            <h4 style="margin-bottom:0.2rem;">
+              {% block link %}
+                <a 
+                  href="{{ url({tag:page.tag,handler:(args.displaytype == "modal" ? 'iframe' : '')}) }}"
+                  {% if args.displaytype == "newtab" %}
+                    class="new-window"
+                  {% elseif args.displaytype == "modal" %}
+                    class="modalbox"
+                    data-iframe="1"
+                    data-size="modal-lg"
+                  {% endif %}
+                  title="{{ page.tag }}"
+                  >
+                  {{ page.tag }}
+                </a>
+              {% endblock %}
+            </h4>
             {% if page.preRendered is not empty %}
               {{ page.preRendered|raw }}
             {% endif %}
@@ -53,7 +69,7 @@
       {% set firstDisplayItem = true %}
       {% for page in results %}
         {% if not firstDisplayItem %}{{ args.separator }}{% else %}{% set firstDisplayItem = false %}{% endif %}
-        <a href="{{ url({tag:page.tag}) }}">{{ page.tag }}</a>
+        {{ block('link') }}
       {% endfor %}
     </p>
   {% endif %}

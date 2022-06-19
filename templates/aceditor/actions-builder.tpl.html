@@ -43,6 +43,16 @@
             "newtextsearch-by-form.twig" => _t('AB_advanced_action_newtextsearch_template_by_form'),
          ],
      ];
+     $data['action_groups']['advanced-actions']['actions']['newtextsearch']['properties']['displaytype'] = [
+         'label' => _t('AB_advanced_action_newtextsearch_displaytype_label'),
+         'type' => "list",
+         'default' => "modal",
+         'options' => [
+            "modal" => _t('AB_advanced_action_newtextsearch_displaytype_modal'),
+            "link" => _t('AB_advanced_action_newtextsearch_displaytype_link'),
+            "newtab" => _t('AB_advanced_action_newtextsearch_displaytype_newtab'),
+         ]
+     ];
      $data['action_groups']['advanced-actions']['actions']['newtextsearch']['properties']['displayorder'] = [
          'label' => _t('AB_advanced_action_newtextsearch_displayorder_label'),
          'type' => "text",

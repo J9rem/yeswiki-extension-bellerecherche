@@ -1,4 +1,4 @@
-{% macro displayResult(title,elems) %}
+{% macro displayResult(title,elems,args) %}
     {% if elems is not empty %}
         <div>
             <h3>{{ title }}</h3>
@@ -14,6 +14,7 @@
 
 {% extends "@core/newtextsearch.twig" %}
 
+
 {% block results %}
   {% if searchText is empty %}
   {% elseif results is empty %}
@@ -22,7 +23,7 @@
     {{ format('---- --- **' ~ _t('SEARCH_RESULTS') ~ ' [""' ~ searchText ~ '""] :---**')|raw }}
     {# show by forms or pages#}
     {% for formId in (args.displayorder is empty ? formsTitles|keys : args.displayorder) %}
-        {{ _self.displayResult(formsTitles[formId],results|filter(e => e.form == formId)) }}
+        {{ _self.displayResult(formsTitles[formId],results|filter(e => e.form == formId),args) }}
     {% endfor %}
   {% endif %}
 {% endblock %}

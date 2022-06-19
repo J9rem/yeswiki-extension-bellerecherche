@@ -60,7 +60,8 @@ class NewTextSearchAction__ extends YesWikiAction
                 return ($item == 'pages') ? 'page' : $item;
             }, $this->formatArray($arg['displayorder'] ?? [])),
             'limit' => isset($arg['limit']) && intval($arg['limit']) > 0 ? intval($arg['limit']) : self::DEFAULT_LIMIT,
-            'titles' => array_map('strval', $this->formatArray($arg['titles'] ?? []))
+            'titles' => array_map('strval', $this->formatArray($arg['titles'] ?? [])),
+            'displaytype' => (empty($arg['displaytype']) || !is_string($arg['displaytype']) || !in_array($arg['displaytype'], ['link','modal','newtab'])) ? 'modal' : $arg['displaytype'],
         ];
     }
 

@@ -24,4 +24,8 @@
     'AB_advanced_action_newtextsearch_limit_label' => 'Nombre de résultats maximum',
     'AB_advanced_action_newtextsearch_titles_label' => 'Titres',
     'AB_advanced_action_newtextsearch_titles_hint' => 'Titres associés séparés par des virgules (vide = titre par défaut) ; ex: "Agenda,,Page"',
+    'AB_advanced_action_newtextsearch_displaytype_label' => 'Type d\'affichage',
+    'AB_advanced_action_newtextsearch_displaytype_modal' => 'Fenêtre modale',
+    'AB_advanced_action_newtextsearch_displaytype_link' => 'Onglet courant',
+    'AB_advanced_action_newtextsearch_displaytype_newtab' => 'Nouvel onglet',
  ];
