@@ -35,13 +35,22 @@
          'default' => _t('SEARCH'),
      ];
      $data['action_groups']['advanced-actions']['actions']['newtextsearch']['properties']['template'] = [
-         'label' => _t('AB_advanced_action_textsearch_template_label'),
+         'label' => _t('AB_advanced_action_newtextsearch_template_label'),
          'type' => "list",
          'default' => "newtextsearch.twig",
          'options' => [
-            "newtextsearch.twig" => _t('AB_advanced_action_textsearch_template_standard'),
-            "newtextsearch-by-form.twig" => _t('AB_advanced_action_textsearch_template_by_form'),
+            "newtextsearch.twig" => _t('AB_advanced_action_newtextsearch_template_standard'),
+            "newtextsearch-by-form.twig" => _t('AB_advanced_action_newtextsearch_template_by_form'),
          ],
+     ];
+     $data['action_groups']['advanced-actions']['actions']['newtextsearch']['properties']['displayorder'] = [
+         'label' => _t('AB_advanced_action_newtextsearch_displayorder_label'),
+         'type' => "text",
+         'hint' => _t('AB_advanced_action_newtextsearch_displayorder_hint'),
+         'showif' => [
+            'template' => "^$|^newtextsearch-by-form\.twig$",
+         ],
+         'default' => "",
      ];
      $data['action_groups']['advanced-actions']['actions']['newtextsearch']['properties']['phrase'] = [
          'label' => _t('AB_advanced_action_textsearch_phrase_label'),
@@ -56,10 +65,22 @@
          'advanced' => true,
      ];
      $data['action_groups']['advanced-actions']['actions']['newtextsearch']['properties']['displaytext'] = [
-         'label' => _t('AB_advanced_action_textsearch_displaytext_label'),
-         'type' => "checkbox",
-         'default' => false,
+         'label' => _t('AB_advanced_action_newtextsearch_displaytext_label'),
+         'type' => "list",
+         'default' => "",
          'advanced' => true,
+         "options" => [
+            "" => _t('AB_advanced_action_newtextsearch_displaytext_only_std'),
+            "true" => _t('YES'),
+            "false" => _t('NO'),
+         ]
+     ];
+     $data['action_groups']['advanced-actions']['actions']['newtextsearch']['properties']['limit'] = [
+         'label' => _t('AB_advanced_action_newtextsearch_limit_label'),
+         'type' => "number",
+         'default' => 100,
+         'advanced' => true,
+         'min' => 1,
      ];
  }
  

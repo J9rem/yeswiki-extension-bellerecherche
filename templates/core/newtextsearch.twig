@@ -38,24 +38,22 @@
     {{ format('---- --- **' ~ _t('SEARCH_RESULTS') ~ ' [""' ~ searchText ~ '""] :---**')|raw }}
     <ol>
       {% for page in results %}
-        {% if page.hasAccess %}
+        {% block liWithNumber %}
           <li>
             <h4 style="margin-bottom:0.2rem;"><a href="{{ url({tag:page.tag}) }}">{{ page.tag }}</a></h4>
             {% if page.preRendered is not empty %}
               {{ page.preRendered|raw }}
             {% endif %}
           </li>
-        {% endif %}
+        {% endblock %}
       {% endfor %}
     </ol>
   {% else %}
     <p>{{ _t('SEARCH_RESULT_OF') }} "{{ searchText }}"&nbsp;: 
       {% set firstDisplayItem = true %}
       {% for page in results %}
-        {% if page.hasAccess %}
-          {% if not firstDisplayItem %}{{ args.separator }}{% else %}{% set firstDisplayItem = false %}{% endif %}
-          <a href="{{ url({tag:page.tag}) }}">{{ page.tag }}</a>
-        {% endif %}
+        {% if not firstDisplayItem %}{{ args.separator }}{% else %}{% set firstDisplayItem = false %}{% endif %}
+        <a href="{{ url({tag:page.tag}) }}">{{ page.tag }}</a>
       {% endfor %}
     </p>
   {% endif %}

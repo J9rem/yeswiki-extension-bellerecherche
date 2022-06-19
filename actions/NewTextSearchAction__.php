@@ -25,6 +25,7 @@ class NewTextSearchAction__ extends YesWikiAction
     public const DEFAULT_TEMPLATE = "newtextsearch.twig";
     public const BY_FORM_TEMPLATE = "newtextsearch-by-form.twig";
     public const MAX_DISPLAY_PAGES = 25;
+    public const DEFAULT_LIMIT = 100;
 
     protected $aclService;
     protected $dbService;
@@ -55,6 +56,10 @@ class NewTextSearchAction__ extends YesWikiAction
             'separator' => isset($arg['separator']) && is_string($arg['separator']) ? htmlspecialchars($arg['separator'], ENT_COMPAT, YW_CHARSET): '',
             'template' =>$template,
             'displaytext' => $this->formatBoolean($arg, $template == self::DEFAULT_TEMPLATE, 'displaytext'),
+            'displayorder' => array_map(function ($item) {
+                return ($item == 'pages') ? 'page' : $item;
+            }, $this->formatArray($arg['displayorder'] ?? [])),
+            'limit' => isset($arg['limit']) && intval($arg['limit']) > 0 ? intval($arg['limit']) : self::DEFAULT_LIMIT,
         ];
     }
 
@@ -81,51 +86,59 @@ class NewTextSearchAction__ extends YesWikiAction
         $formsTitles = [];
         if (!empty($searchText)) {
             list('requestfull' => $sqlRequest, 'needles' => $needles) = $this->getSqlRequest($searchText);
+            $this->addDisplayOrderRestrictions($sqlRequest);
             $results = $this->dbService->loadAll($sqlRequest);
             if (empty($results)) {
                 $results = [];
             } else {
                 $counter = 0;
+                $filteredResults = [];
                 foreach ($results as $key => $page) {
-                    $results[$key]['hasAccess'] = $this->aclService->hasAccess("read", $page["tag"]);
-                    if ($this->arguments['displaytext'] &&
-                        empty($this->arguments['separator']) &&
-                        $results[$key]['hasAccess'] &&
-                        $counter < self::MAX_DISPLAY_PAGES &&
-                        $page["tag"] != $this->wiki->tag &&
-                        !$this->wiki->IsIncludedBy($page["tag"])) {
-                        if ($this->entryManager->isEntry($page["tag"])) {
-                            $renderedEntry = $this->entryController->view($page["tag"], '', false); // without footer
-                            $results[$key]['preRendered'] = $this->displayNewSearchResult(
-                                $renderedEntry,
-                                $searchText,
-                                $needles
-                            );
-                        }
-                        
-                        if (empty($results[$key]['preRendered'])) {
-                            $results[$key]['preRendered'] = $this->displayNewSearchResult(
-                                $this->wiki->Format($page["body"], 'wakka', $page["tag"]),
-                                $searchText,
-                                $needles
-                            );
-                        }
-                        $counter += 1;
-                    }
-                    if ($this->arguments['template'] == self::BY_FORM_TEMPLATE && $results[$key]['hasAccess']) {
-                        if ($this->entryManager->isEntry($page["tag"])) {
-                            $entry = $this->entryManager->getOne($page["tag"]);
-                            if (!empty($entry['id_typeannonce'])) {
-                                $results[$key]['form'] =  strval(intval($entry['id_typeannonce']));
-                                if (!isset($formsTitles[$results[$key]['form']])) {
-                                    $form = $this->formManager->getOne($results[$key]['form']);
-                                    $formsTitles[$results[$key]['form']] = $form['bn_label_nature'] ?? $results[$key]['form'];
-                                }
+                    if ($this->aclService->hasAccess("read", $page["tag"])) {
+                        $data = $page;
+                        if ($this->arguments['displaytext'] &&
+                            empty($this->arguments['separator']) &&
+                            $counter < self::MAX_DISPLAY_PAGES &&
+                            $page["tag"] != $this->wiki->tag &&
+                            !$this->wiki->IsIncludedBy($page["tag"])) {
+                            if ($this->entryManager->isEntry($page["tag"])) {
+                                $renderedEntry = $this->entryController->view($page["tag"], '', false); // without footer
+                                $data['preRendered'] = $this->displayNewSearchResult(
+                                    $renderedEntry,
+                                    $searchText,
+                                    $needles
+                                );
                             }
-                        } else {
-                            $results[$key]['form'] =  'page';
+                            
+                            if (empty($data['preRendered'])) {
+                                $data['preRendered'] = $this->displayNewSearchResult(
+                                    $this->wiki->Format($page["body"], 'wakka', $page["tag"]),
+                                    $searchText,
+                                    $needles
+                                );
+                            }
+                            $counter += 1;
+                        }
+                        if ($this->arguments['template'] == self::BY_FORM_TEMPLATE) {
+                            if ($this->entryManager->isEntry($page["tag"])) {
+                                $entry = $this->entryManager->getOne($page["tag"]);
+                                if (!empty($entry['id_typeannonce'])) {
+                                    $data['form'] =  strval(intval($entry['id_typeannonce']));
+                                    if (!isset($formsTitles[$data['form']])) {
+                                        $form = $this->formManager->getOne($data['form']);
+                                        $formsTitles[$data['form']] = $form['bn_label_nature'] ?? $data['form'];
+                                    }
+                                }
+                            } else {
+                                $data['form'] =  'page';
+                            }
                         }
                     }
+                    $filteredResults[] = $data;
+                }
+                $results = $filteredResults;
+                if (!isset($formsTitles['page'])) {
+                    $formsTitles['page'] = _t("BELLERECHERCHE_PAGES");
                 }
             }
         }
@@ -190,7 +203,7 @@ class NewTextSearchAction__ extends YesWikiAction
         // TODO retrouver la facon d'afficher les commentaires (AFFICHER_COMMENTAIRES ? '':'AND tag NOT LIKE "comment%"').
         $requestfull = "SELECT body, tag FROM {$this->dbService->prefixTable('pages')} ".
             "WHERE latest = \"Y\" {$this->aclService->updateRequestWithACL()} ".
-            "AND (body LIKE \"%{$phraseFormatted}%\"{$requeteSQLForList}) ORDER BY tag LIMIT 100";
+            "AND (body LIKE \"%{$phraseFormatted}%\"{$requeteSQLForList}) ORDER BY tag LIMIT {$this->arguments['limit']}";
 
         return compact('requestfull', 'needles');
     }
@@ -224,5 +237,43 @@ class NewTextSearchAction__ extends YesWikiAction
             }
         }
         return $string_re;
+    }
+
+    private function addDisplayOrderRestrictions(string &$sql)
+    {
+        if (!empty($this->arguments['displayorder'])) {
+            list($sql, $end) = explode('ORDER BY', $sql);
+            $sql .= " AND (";
+            if (in_array('page', $this->arguments['displayorder'])) {
+                $sql .= "`tag` NOT IN (SELECT `resource` FROM {$this->dbService->prefixTable('triples')} ".
+                "WHERE `value` = 'fiche_bazar' AND `property` = 'http://outils-reseaux.org/_vocabulary/type')";
+                if (count($this->arguments['displayorder']) > 1) {
+                    $sql .= " OR ";
+                }
+            }
+            if ((in_array('page', $this->arguments['displayorder']) && count($this->arguments['displayorder']) > 1)
+                || !in_array('page', $this->arguments['displayorder'])) {
+                $sql .= "(`tag` IN (SELECT `resource` FROM {$this->dbService->prefixTable('triples')} ".
+                "WHERE `value` = 'fiche_bazar' AND `property` = 'http://outils-reseaux.org/_vocabulary/type') AND (";
+                $sql .= implode(
+                    " OR ",
+                    array_map(
+                        function ($formId) {
+                            return " `body` LIKE '%\"id_typeannonce\":\"{$this->dbService->escape(intval($formId))}\"%'";
+                        },
+                        array_filter(
+                            $this->arguments['displayorder'],
+                            function ($formId) {
+                                return $formId != 'page';
+                            }
+                        )
+                    )
+                );
+                $sql .= "))";
+            }
+
+            $sql .= ")";
+            $sql .= " ORDER BY $end";
+        }
     }
 }
