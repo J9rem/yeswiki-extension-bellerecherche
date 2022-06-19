@@ -52,6 +52,15 @@
          ],
          'default' => "",
      ];
+     $data['action_groups']['advanced-actions']['actions']['newtextsearch']['properties']['titles'] = [
+         'label' => _t('AB_advanced_action_newtextsearch_titles_label'),
+         'type' => "text",
+         'hint' => _t('AB_advanced_action_newtextsearch_titles_hint'),
+         'showif' => [
+            'template' => "^$|^newtextsearch-by-form\.twig$",
+         ],
+         'default' => "",
+     ];
      $data['action_groups']['advanced-actions']['actions']['newtextsearch']['properties']['phrase'] = [
          'label' => _t('AB_advanced_action_textsearch_phrase_label'),
          'type' => "text",

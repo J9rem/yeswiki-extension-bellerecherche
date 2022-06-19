@@ -60,6 +60,7 @@ class NewTextSearchAction__ extends YesWikiAction
                 return ($item == 'pages') ? 'page' : $item;
             }, $this->formatArray($arg['displayorder'] ?? [])),
             'limit' => isset($arg['limit']) && intval($arg['limit']) > 0 ? intval($arg['limit']) : self::DEFAULT_LIMIT,
+            'titles' => array_map('strval', $this->formatArray($arg['titles'] ?? []))
         ];
     }
 
@@ -84,6 +85,11 @@ class NewTextSearchAction__ extends YesWikiAction
         }
 
         $formsTitles = [];
+        if (!empty($this->arguments['titles'])) {
+            for ($i=0; $i < count($this->arguments['titles']) && $i < count($this->arguments['displayorder']); $i++) {
+                $formsTitles[$this->arguments['displayorder'][$i]] = $this->arguments['titles'][$i];
+            }
+        }
         if (!empty($searchText)) {
             list('requestfull' => $sqlRequest, 'needles' => $needles) = $this->getSqlRequest($searchText);
             $this->addDisplayOrderRestrictions($sqlRequest);

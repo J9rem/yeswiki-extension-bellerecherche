@@ -22,4 +22,6 @@
    'AB_advanced_action_newtextsearch_displayorder_label' => 'Keep forms',
    'AB_advanced_action_newtextsearch_displayorder_hint' => 'Give ids of forms to display, separated by coma ex: 2,4,pages (\'pages\' indicates pages)',
     'AB_advanced_action_newtextsearch_limit_label' => 'Maximum number of results',
+    'AB_advanced_action_newtextsearch_titles_label' => 'Titles',
+    'AB_advanced_action_newtextsearch_titles_hint' => 'Associated titles separated by coma (empty = default title) ; ex: "Calendar,,Page"',
  ];
