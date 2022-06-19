@@ -28,4 +28,6 @@
     'AB_advanced_action_newtextsearch_displaytype_modal' => 'Fenêtre modale',
     'AB_advanced_action_newtextsearch_displaytype_link' => 'Onglet courant',
     'AB_advanced_action_newtextsearch_displaytype_newtab' => 'Nouvel onglet',
+    'AB_advanced_action_textsearch_onlytags_label' => 'Seulement les tags :',
+    'AB_advanced_action_textsearch_onlytags_hint' => 'séparés par des virgules',
  ];

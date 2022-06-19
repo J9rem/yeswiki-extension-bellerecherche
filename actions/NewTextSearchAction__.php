@@ -62,6 +62,7 @@ class NewTextSearchAction__ extends YesWikiAction
             'limit' => isset($arg['limit']) && intval($arg['limit']) > 0 ? intval($arg['limit']) : self::DEFAULT_LIMIT,
             'titles' => array_map('strval', $this->formatArray($arg['titles'] ?? [])),
             'displaytype' => (empty($arg['displaytype']) || !is_string($arg['displaytype']) || !in_array($arg['displaytype'], ['link','modal','newtab'])) ? 'modal' : $arg['displaytype'],
+            'onlytags' => array_filter(array_map('trim', array_map('strval', $this->formatArray($arg['onlytags'] ?? [])))),
         ];
     }
 
@@ -94,6 +95,8 @@ class NewTextSearchAction__ extends YesWikiAction
         if (!empty($searchText)) {
             list('requestfull' => $sqlRequest, 'needles' => $needles) = $this->getSqlRequest($searchText);
             $this->addDisplayOrderRestrictions($sqlRequest);
+            $this->addTagsRestrictions($sqlRequest);
+            $this->addSQLLimit($sqlRequest);
             $results = $this->dbService->loadAll($sqlRequest);
             if (empty($results)) {
                 $results = [];
@@ -210,7 +213,7 @@ class NewTextSearchAction__ extends YesWikiAction
         // TODO retrouver la facon d'afficher les commentaires (AFFICHER_COMMENTAIRES ? '':'AND tag NOT LIKE "comment%"').
         $requestfull = "SELECT body, tag FROM {$this->dbService->prefixTable('pages')} ".
             "WHERE latest = \"Y\" {$this->aclService->updateRequestWithACL()} ".
-            "AND (body LIKE \"%{$phraseFormatted}%\"{$requeteSQLForList}) ORDER BY tag LIMIT {$this->arguments['limit']}";
+            "AND (body LIKE \"%{$phraseFormatted}%\"{$requeteSQLForList})";
 
         return compact('requestfull', 'needles');
     }
@@ -245,11 +248,15 @@ class NewTextSearchAction__ extends YesWikiAction
         }
         return $string_re;
     }
+    
+    private function addSQLLimit(string &$sql)
+    {
+        $sql .=  " ORDER BY tag LIMIT {$this->arguments['limit']}";
+    }
 
     private function addDisplayOrderRestrictions(string &$sql)
     {
         if (!empty($this->arguments['displayorder'])) {
-            list($sql, $end) = explode('ORDER BY', $sql);
             $sql .= " AND (";
             if (in_array('page', $this->arguments['displayorder'])) {
                 $sql .= "`tag` NOT IN (SELECT `resource` FROM {$this->dbService->prefixTable('triples')} ".
@@ -280,7 +287,25 @@ class NewTextSearchAction__ extends YesWikiAction
             }
 
             $sql .= ")";
-            $sql .= " ORDER BY $end";
+        }
+    }
+
+    private function addTagsRestrictions(string &$sql)
+    {
+        if (!empty($this->arguments['onlytags'])) {
+            $sql .= " AND `tag` IN (".
+                "SELECT `resource` FROM {$this->dbService->prefixTable('triples')} ".
+                "WHERE `value` IN (".implode(
+                    ',',
+                    array_map(
+                        function ($tag) {
+                            return "\"{$this->dbService->escape($tag)}\"";
+                        },
+                        $this->arguments['onlytags']
+                    )
+                ).") ".
+                "AND property=\"http://outils-reseaux.org/_vocabulary/tag\" ".
+                " )";
         }
     }
 }
