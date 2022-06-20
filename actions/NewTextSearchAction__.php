@@ -57,7 +57,18 @@ class NewTextSearchAction__ extends YesWikiAction
             'template' =>$template,
             'displaytext' => $this->formatBoolean($arg, $template == self::DEFAULT_TEMPLATE, 'displaytext'),
             'displayorder' => array_map(function ($item) {
-                return ($item == 'pages') ? 'page' : $item;
+                switch ($item) {
+                    case 'pages':
+                    case 'page':
+                        return 'page';
+                    case 'logspages':
+                    case 'logpages':
+                    case 'logspage':
+                    case 'logpage':
+                        return 'logpage';
+                    default:
+                        return intval($item);
+                }
             }, $this->formatArray($arg['displayorder'] ?? [])),
             'limit' => isset($arg['limit']) && intval($arg['limit']) > 0 ? intval($arg['limit']) : self::DEFAULT_LIMIT,
             'titles' => array_map('strval', $this->formatArray($arg['titles'] ?? [])),
@@ -149,6 +160,8 @@ class NewTextSearchAction__ extends YesWikiAction
                                         $formsTitles[$data['form']] = $form['bn_label_nature'] ?? $data['form'];
                                     }
                                 }
+                            } elseif (substr($page["tag"], 0, strlen('LogDesActionsAdministratives')) == 'LogDesActionsAdministratives') {
+                                $data['form'] =  'logpage';
                             } else {
                                 $data['form'] =  'page';
                             }
@@ -162,6 +175,9 @@ class NewTextSearchAction__ extends YesWikiAction
                 $results = $filteredResults;
                 if (!isset($formsTitles['page'])) {
                     $formsTitles['page'] = _t("BELLERECHERCHE_PAGES");
+                }
+                if (in_array('logpage', $this->arguments['displayorder']) && !isset($formsTitles['logpage'])) {
+                    $formsTitles['logpage'] = _t("BELLERECHERCHE_LOG_PAGES");
                 }
             }
         }
