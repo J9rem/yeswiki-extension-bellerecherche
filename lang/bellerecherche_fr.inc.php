@@ -30,4 +30,6 @@
     'AB_advanced_action_newtextsearch_displaytype_newtab' => 'Nouvel onglet',
     'AB_advanced_action_textsearch_onlytags_label' => 'Seulement les tags :',
     'AB_advanced_action_textsearch_onlytags_hint' => 'séparés par des virgules',
+    'AB_advanced_action_textsearch_nbcols_label' => 'Nombre de colonnes',
+    'AB_advanced_action_textsearch_nbcols_hint' => '0 = mise en colonne automatique et variable en fonction du contenu',
  ];

@@ -26,4 +26,6 @@
     'AB_advanced_action_newtextsearch_titles_hint' => 'Associated titles separated by coma (empty = default title) ; ex: "Calendar,,Page"',
     'AB_advanced_action_textsearch_onlytags_label' => 'Only tags:',
     'AB_advanced_action_textsearch_onlytags_hint' => 'coma separated',
+    'AB_advanced_action_textsearch_nbcols_label' => 'Number of coloumnes',
+    'AB_advanced_action_textsearch_nbcols_hint' => '0 = automatic and variable number of columns according to content',
  ];

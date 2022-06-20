@@ -63,6 +63,12 @@ class NewTextSearchAction__ extends YesWikiAction
             'titles' => array_map('strval', $this->formatArray($arg['titles'] ?? [])),
             'displaytype' => (empty($arg['displaytype']) || !is_string($arg['displaytype']) || !in_array($arg['displaytype'], ['link','modal','newtab'])) ? 'modal' : $arg['displaytype'],
             'onlytags' => array_filter(array_map('trim', array_map('strval', $this->formatArray($arg['onlytags'] ?? [])))),
+            'nbcols' => (
+                isset($arg['nbcols']) &&
+                is_scalar($arg['nbcols']) &&
+                intval($arg['nbcols']) >= 0 &&
+                intval($arg['nbcols']) <= 3
+            ) ? intval($arg['nbcols']) : 2,
         ];
     }
 
@@ -144,6 +150,9 @@ class NewTextSearchAction__ extends YesWikiAction
                             } else {
                                 $data['form'] =  'page';
                             }
+                        }
+                        if ($this->entryManager->isEntry($page["tag"]) && !empty($entry['bf_titre'])) {
+                            $data['title'] = $entry['bf_titre'];
                         }
                     }
                     $filteredResults[] = $data;

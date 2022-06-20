@@ -108,6 +108,18 @@
         'default' => "",
         'advanced' => true,
      ];
+     $data['action_groups']['advanced-actions']['actions']['newtextsearch']['properties']['nbcols'] = [
+        'label' => _t('AB_advanced_action_textsearch_nbcols_label'),
+        'hint' => _t('AB_advanced_action_textsearch_nbcols_hint'),
+        'type' => "number",
+        'default' => 2,
+        'min' => 0,
+        'max' => 3,
+        'advanced' => true,
+        'showif' => [
+           'template' => "^$|^newtextsearch-by-form\.twig$",
+        ],
+     ];
  }
  
  $paths = $this->twigLoader->getPaths("aceditor");

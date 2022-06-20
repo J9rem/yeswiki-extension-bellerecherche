@@ -51,9 +51,9 @@
                     data-iframe="1"
                     data-size="modal-lg"
                   {% endif %}
-                  title="{{ page.tag }}"
+                  title="{{ page.title ?? page.tag }}"
                   >
-                  {{ page.tag }}
+                  {{ page.title is not empty ? (page.title|length > 70 ? page.title|slice(0,70) ~ '…': page.title) : page.tag }}
                 </a>
               {% endblock %}
             </h4>
