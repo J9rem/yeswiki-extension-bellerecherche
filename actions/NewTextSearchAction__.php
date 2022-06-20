@@ -95,7 +95,9 @@ class NewTextSearchAction__ extends YesWikiAction
         $formsTitles = [];
         if (!empty($this->arguments['titles'])) {
             for ($i=0; $i < count($this->arguments['titles']) && $i < count($this->arguments['displayorder']); $i++) {
-                $formsTitles[$this->arguments['displayorder'][$i]] = $this->arguments['titles'][$i];
+                if (!empty($this->arguments['titles'][$i])) {
+                    $formsTitles[$this->arguments['displayorder'][$i]] = $this->arguments['titles'][$i];
+                }
             }
         }
         if (!empty($searchText)) {
