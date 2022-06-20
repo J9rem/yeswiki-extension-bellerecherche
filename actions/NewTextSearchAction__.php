@@ -42,7 +42,7 @@ class NewTextSearchAction__ extends YesWikiAction
             !empty(basename($arg['template'])) &&
             $this->templateEngine->hasTemplate("@core/".basename($arg['template'])))
             ? basename($arg['template'])
-            : self::DEFAULT_TEMPLATE;
+            : self::BY_FORM_TEMPLATE;
         return [
             // label à afficher devant la zone de saisie
             'label' => isset($arg['label']) && is_string($arg['label']) ? $arg['label'] : _t('WHAT_YOU_SEARCH')." : ",
@@ -103,6 +103,7 @@ class NewTextSearchAction__ extends YesWikiAction
             } else {
                 $counter = 0;
                 $filteredResults = [];
+                $isActionBuilderPreview = $this->wiki->GetPageTag() == 'root';
                 foreach ($results as $key => $page) {
                     if ($this->aclService->hasAccess("read", $page["tag"])) {
                         $data = $page;
@@ -110,6 +111,7 @@ class NewTextSearchAction__ extends YesWikiAction
                             empty($this->arguments['separator']) &&
                             $counter < self::MAX_DISPLAY_PAGES &&
                             $page["tag"] != $this->wiki->tag &&
+                            !$isActionBuilderPreview &&
                             !$this->wiki->IsIncludedBy($page["tag"])) {
                             if ($this->entryManager->isEntry($page["tag"])) {
                                 $renderedEntry = $this->entryController->view($page["tag"], '', false); // without footer
