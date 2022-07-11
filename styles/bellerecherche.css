@@ -10,3 +10,14 @@ div.newtextsearch-by-form-container > .newtextsearch-by-form-group{
 div.newtextsearch-by-form-container > .newtextsearch-by-form-group a {
     overflow-x: hidden;
 }
+
+/* à retirer après fusion dans le coeur */
+
+.input-group-lg > .form-control, .input-group-lg > .input-group-addon, 
+.input-group-lg > .input-group-btn > .btn {
+  padding: 10px 16px !important;
+}
+
+.input-group-addon:last-child, .input-group-btn:last-child > .btn {
+  height: 46px;
+}
