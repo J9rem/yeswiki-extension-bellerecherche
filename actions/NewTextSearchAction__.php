@@ -19,6 +19,7 @@ use YesWiki\Core\Service\AclService;
 use YesWiki\Core\Service\DbService;
 use YesWiki\Core\Service\TemplateEngine;
 use YesWiki\Core\YesWikiAction;
+use YesWiki\Tags\Service\TagsManager;
 
 class NewTextSearchAction__ extends YesWikiAction
 {
@@ -33,6 +34,7 @@ class NewTextSearchAction__ extends YesWikiAction
     protected $entryManager;
     protected $formManager;
     protected $searchManager;
+    protected $tagsManager;
     protected $templateEngine;
 
     public function formatArguments($arg)
@@ -67,7 +69,7 @@ class NewTextSearchAction__ extends YesWikiAction
                     case 'logpage':
                         return 'logpage';
                     default:
-                        return intval($item);
+                        return strval(intval($item)) == strval($item) ? intval($item) : strval($item);
                 }
             }, $this->formatArray($arg['displayorder'] ?? [])),
             'limit' => isset($arg['limit']) && intval($arg['limit']) > 0 ? intval($arg['limit']) : self::DEFAULT_LIMIT,
@@ -92,6 +94,7 @@ class NewTextSearchAction__ extends YesWikiAction
         $this->entryManager = $this->getservice(EntryManager::class);
         $this->formManager = $this->getservice(FormManager::class);
         $this->searchManager = $this->getservice(SearchManager::class);
+        $this->tagsManager = $this->getservice(TagsManager::class);
 
         // récupération de la recherche à partir du paramètre 'phrase'
         $searchText = !empty($this->arguments['phrase']) ? htmlspecialchars($this->arguments['phrase'], ENT_COMPAT, YW_CHARSET) : '';
@@ -123,6 +126,7 @@ class NewTextSearchAction__ extends YesWikiAction
                 $counter = 0;
                 $filteredResults = [];
                 $isActionBuilderPreview = $this->wiki->GetPageTag() == 'root';
+                $tagsToFollow = $this->getPagesForTagsToFollow();
                 foreach ($results as $key => $page) {
                     if ($this->aclService->hasAccess("read", $page["tag"])) {
                         $data = $page;
@@ -169,8 +173,17 @@ class NewTextSearchAction__ extends YesWikiAction
                         if ($this->entryManager->isEntry($page["tag"]) && !empty($entry['bf_titre'])) {
                             $data['title'] = $entry['bf_titre'];
                         }
+                        $filteredResults[] = $data;
+                        if (!empty($tagsToFollow[$page["tag"]])) {
+                            foreach ($tagsToFollow[$page["tag"]] as $tag) {
+                                $data['form'] = $tag;
+                                $filteredResults[] = $data;
+                                if (!isset($formsTitles[$tag])) {
+                                    $formsTitles[$tag] = $tag;
+                                }
+                            }
+                        }
                     }
-                    $filteredResults[] = $data;
                 }
                 $results = $filteredResults;
                 if (!isset($formsTitles['page'])) {
@@ -285,17 +298,22 @@ class NewTextSearchAction__ extends YesWikiAction
 
     private function addDisplayOrderRestrictions(string &$sql)
     {
-        if (!empty($this->arguments['displayorder'])) {
+        $onlyForms = array_filter(
+            $this->arguments['displayorder'],
+            function ($formId) {
+                return !in_array($formId, ['page','logpage']) && (strval($formId) == strval(intval($formId)));
+            }
+        );
+        if (!empty($this->arguments['displayorder']) && (!empty($onlyForms) || in_array('page', $this->arguments['displayorder']))) {
             $sql .= " AND (";
             if (in_array('page', $this->arguments['displayorder'])) {
                 $sql .= "`tag` NOT IN (SELECT `resource` FROM {$this->dbService->prefixTable('triples')} ".
                 "WHERE `value` = 'fiche_bazar' AND `property` = 'http://outils-reseaux.org/_vocabulary/type')";
-                if (count($this->arguments['displayorder']) > 1) {
+                if (count($onlyForms) > 1) {
                     $sql .= " OR ";
                 }
             }
-            if ((in_array('page', $this->arguments['displayorder']) && count($this->arguments['displayorder']) > 1)
-                || !in_array('page', $this->arguments['displayorder'])) {
+            if (count($onlyForms) > 1) {
                 $sql .= "(`tag` IN (SELECT `resource` FROM {$this->dbService->prefixTable('triples')} ".
                 "WHERE `value` = 'fiche_bazar' AND `property` = 'http://outils-reseaux.org/_vocabulary/type') AND (";
                 $sql .= implode(
@@ -304,12 +322,7 @@ class NewTextSearchAction__ extends YesWikiAction
                         function ($formId) {
                             return " `body` LIKE '%\"id_typeannonce\":\"{$this->dbService->escape(intval($formId))}\"%'";
                         },
-                        array_filter(
-                            $this->arguments['displayorder'],
-                            function ($formId) {
-                                return $formId != 'page';
-                            }
-                        )
+                        $onlyForms
                     )
                 );
                 $sql .= "))";
@@ -336,5 +349,24 @@ class NewTextSearchAction__ extends YesWikiAction
                 "AND property=\"http://outils-reseaux.org/_vocabulary/tag\" ".
                 " )";
         }
+    }
+
+    private function getPagesForTagsToFollow(): array
+    {
+        $tagsToFollow = array_filter($this->arguments['displayorder'], function ($item) {
+            return !empty($item) && !in_array($item, ['page','logpage']) && (strval($item) != strval(intval($item)));
+        });
+        $results = [];
+        foreach ($tagsToFollow as $tag) {
+            $pagesOrEntries = $this->tagsManager->getPagesByTags($tag);
+            foreach ($pagesOrEntries as $page) {
+                if (!isset($results[$page['tag']])) {
+                    $results[$page['tag']] = [$tag];
+                } elseif (!in_array($tag, $results[$page['tag']])) {
+                    $results[$page['tag']][] = $tag;
+                }
+            }
+        }
+        return $results;
     }
 }
