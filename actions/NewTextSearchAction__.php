@@ -170,8 +170,15 @@ class NewTextSearchAction__ extends YesWikiAction
                                 $data['form'] =  'page';
                             }
                         }
-                        if ($this->entryManager->isEntry($page["tag"]) && !empty($entry['bf_titre'])) {
-                            $data['title'] = $entry['bf_titre'];
+                        if ($this->entryManager->isEntry($page["tag"])) {
+                            if (!empty($entry['bf_titre'])) {
+                                $data['title'] = $entry['bf_titre'];
+                            }
+                        } elseif (function_exists('getTitleFromBody')) {
+                            $titleFormPage = getTitleFromBody($page);
+                            if (!empty($titleFormPage)) {
+                                $data['title'] = $titleFormPage;
+                            }
                         }
                         $filteredResults[] = $data;
                         if (!empty($tagsToFollow[$page["tag"]])) {
