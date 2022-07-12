@@ -18,6 +18,9 @@ div.newtextsearch-by-form-container > .newtextsearch-by-form-group a {
   padding: 10px 16px !important;
 }
 
-.input-group-addon:last-child, .input-group-btn:last-child > .btn {
+.input-group-addon:last-child {
   height: 46px;
+}
+.input-group-btn:last-child > .btn {
+  height: 45.9px;
 }
